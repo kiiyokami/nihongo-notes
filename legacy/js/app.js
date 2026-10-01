@@ -464,6 +464,23 @@ $$('input[name="k-set"]').forEach(r => { r.onchange = () => { kset = r.value; dr
 $("#k-hide").onchange = drawKana;
 $("#kgrid").onclick = e => { const k = e.target.closest("button.k"); if (k) k.setAttribute("aria-pressed", k.getAttribute("aria-pressed") !== "true"); };
 
+/* ---------- export for the new app ---------- */
+// The new app lives at a different address and can't read this site's storage,
+// so known words travel as a code: base64 of the UTF-8 JSON {v:1, known, lesson}.
+function exportCode() {
+  const json = JSON.stringify({ v: 1, known: [...known], lesson: cur });
+  return btoa(String.fromCharCode(...new TextEncoder().encode(json)));
+}
+$("#c-export").onclick = () => {
+  const code = exportCode();
+  $("#c-export-out").innerHTML = `<label for="c-export-code">Your code</label><textarea id="c-export-code" readonly rows="3">${esc(code)}</textarea>`;
+  $("#c-export-code").select();
+  const done = msg => { $("#c-export-msg").textContent = msg; };
+  (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(
+    () => done("Copied. Paste it into the import box on the new app's home page."),
+    () => done("Copy the code above and paste it into the import box on the new app's home page."));
+};
+
 /* ---------- start ---------- */
 renderLesson(); drawKana(); syncStart();
 showView(store.get("jn-view", "lessons"));

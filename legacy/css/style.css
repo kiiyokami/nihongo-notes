@@ -246,3 +246,6 @@ button.k[aria-pressed="true"]{background:var(--note)}
   .tab[aria-selected="true"]::after{background:Highlight}
   mark.p{forced-color-adjust:none;background:Mark;color:MarkText}
 }
+.export{display:grid;gap:8px}
+.export label{font-weight:700;font-size:.9rem}
+.export textarea{width:100%;padding:8px;border:1px solid var(--edge);border-radius:6px;background:var(--sheet);color:var(--ink);font:inherit;font-size:.8rem;word-break:break-all}
