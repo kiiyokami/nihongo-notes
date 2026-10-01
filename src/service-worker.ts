@@ -20,7 +20,8 @@ sw.addEventListener('install', (event) => {
 	event.waitUntil(
 		caches
 			.open(APP)
-			.then((cache) => cache.addAll(PRECACHE))
+			// straight from the server: the browser's HTTP cache may still hold the previous deploy's pages
+			.then((cache) => cache.addAll(PRECACHE.map((p) => new Request(p, { cache: 'reload' }))))
 			.then(() => sw.skipWaiting())
 	);
 });
