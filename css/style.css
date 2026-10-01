@@ -1,0 +1,248 @@
+/* Study notebook (see DESIGN.md). Dial: ENERGY 1 / RHYTHM 2 / MOTION 1.
+   Paper and ink carry the page so the Japanese reads first.
+   Highlighter yellow marks particles only: they are the thing a learner has to spot.
+   Ink blue marks "where you are" only: current lesson, current tab, the main button.
+   Red pen is for grading only: the circle around a right answer and the index-card rule.
+   Klee One for headings and all Japanese: it draws kana the way they are written by hand
+   (separate strokes in さ and き), which is what a learner copies. Atkinson Hyperlegible for
+   English because it keeps small print clear. No animation: this is a page for reading. */
+:root{
+  --paper:#f6f2e8; --sheet:#fffdf7; --note:#ece6d6; --ink:#1e2230; --pencil:#595e6b;
+  --rule:#dcd5c4; --edge:#8a8475; --blue:#24427c; --on-blue:#fffdf7;
+  --hl:#f5dd62; --hl-ink:#1e2230; --red:#b3261e; --lift:rgba(30,34,48,.28);
+  --f-jp:"Klee One","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#16181f; --sheet:#1f222b; --note:#2a2c33; --ink:#ebe6d9; --pencil:#a8a597;
+  --rule:#30333d; --edge:#6f7280; --blue:#a9bff2; --on-blue:#16181f;
+  --hl:#6a5a12; --hl-ink:#fdf6dc; --red:#ff8f80; --lift:rgba(0,0,0,.55);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#16181f; --sheet:#1f222b; --note:#2a2c33; --ink:#ebe6d9; --pencil:#a8a597;
+  --rule:#30333d; --edge:#6f7280; --blue:#a9bff2; --on-blue:#16181f;
+  --hl:#6a5a12; --hl-ink:#fdf6dc; --red:#ff8f80; --lift:rgba(0,0,0,.55);
+  color-scheme:dark}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1rem/1.6 var(--f-body)}
+@media (min-width:720px){body{font-size:1.0625rem}}
+[lang="ja"]{font-family:var(--f-jp)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+main:focus,[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]{scroll-margin-top:88px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.skip{position:absolute;left:16px;top:-100px;z-index:20;background:var(--sheet);border:1px solid var(--edge);padding:10px 14px;border-radius:6px}
+.skip:focus{top:8px}
+
+/* ---------- header and mode tabs ---------- */
+.top{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule);padding-top:env(safe-area-inset-top)}
+.top-in{max-width:72rem;margin:0 auto;padding:0 16px;min-height:56px;display:flex;align-items:center;gap:8px 24px}
+.brand{margin:0;font-family:var(--f-jp);font-weight:600;font-size:1.25rem;white-space:nowrap}
+.tabs{display:flex;gap:4px}
+.tab{position:relative;background:none;border:0;min-height:44px;padding:0 12px;font-weight:700;color:var(--pencil)}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--blue)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:12px;right:12px;bottom:5px;height:3px;border-radius:2px;background:var(--blue)}
+.theme{margin-left:auto;min-height:44px;padding:0 12px;background:none;border:1px solid var(--edge);border-radius:6px;font-size:.9rem}
+.theme:hover{background:var(--note)}
+
+/* On phones the four modes move to a bottom bar, one thumb away. */
+@media (max-width:719.98px){
+  .modes{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--paper);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom)}
+  .tab{flex:1;min-height:56px;padding:0 4px}
+  .tab[aria-selected="true"]::after{left:25%;right:25%;bottom:8px}
+}
+
+/* ---------- page frame: a rail on the left, the reading column on the right ---------- */
+main{max-width:72rem;margin:0 auto;padding:24px 16px 64px}
+@media (max-width:719.98px){main{padding-bottom:calc(96px + env(safe-area-inset-bottom))}}
+.split{display:grid;gap:24px}
+.content{min-width:0;max-width:44rem}
+@media (min-width:1000px){
+  main{padding-top:40px}
+  .split{grid-template-columns:15rem minmax(0,1fr);gap:56px;align-items:start}
+  .rail{position:sticky;top:96px;max-height:calc(100vh - 112px);overflow:auto}
+}
+.status{margin:0;padding:14px 16px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+.status.error{border:2px solid var(--red)}
+.status .btn{margin-top:12px}
+h1{font-family:var(--f-jp);font-weight:600;font-size:clamp(1.75rem,1.2rem + 2.2vw,2.5rem);line-height:1.25;margin:0 0 8px;text-wrap:balance}
+h2{font-family:var(--f-jp);font-weight:600;font-size:1.4rem;line-height:1.3;margin:48px 0 8px;display:flex;align-items:baseline;gap:10px}
+h2 .count{font-family:var(--f-body);font-weight:400;font-size:.9rem;color:var(--pencil)}
+.hint{margin:8px 0 0;font-size:.9rem;color:var(--pencil)}
+.hint:empty{display:none}
+
+/* ---------- buttons and form controls ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 18px;border:1px solid var(--blue);border-radius:6px;background:var(--blue);color:var(--on-blue);font-weight:700;text-align:center}
+.btn.quiet{background:var(--sheet);border-color:var(--edge);color:var(--ink)}
+.btn:hover{text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.5;cursor:default;text-decoration:none}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{padding:0;margin-bottom:8px;font-weight:700}
+.setup{display:grid;gap:20px;align-content:start}
+.view-title{grid-column:1/-1;margin:0}
+@media (max-width:999.98px){.split>.view-title{order:-2}}
+.ticks,.seg{display:flex;flex-wrap:wrap;gap:6px}
+.tick,.radio{position:relative;display:block}
+.tick input,.radio input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.tick>span,.radio>span{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px 12px;border:1px solid var(--edge);border-radius:6px;background:var(--sheet);font-variant-numeric:tabular-nums}
+.tick>span{padding:4px 0;background:none;color:var(--pencil)}
+/* Several lessons can be ticked at once, so a tick is an outline, not a fill: the fill stays for single choices. */
+.tick input:checked+span{border:2px solid var(--blue);background:var(--sheet);color:var(--blue);font-weight:700}
+.radio input:checked+span{background:var(--blue);border-color:var(--blue);color:var(--on-blue);font-weight:700}
+.tick input:hover+span,.radio input:hover+span{border-color:var(--ink)}
+.tick input:checked:hover+span,.radio input:checked:hover+span{border-color:var(--blue)}
+.tick input:focus-visible+span,.radio input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+.all{min-height:44px;padding:4px 12px;background:none;border:1px solid var(--edge);border-radius:6px;font-size:.9rem}
+.all:hover{background:var(--note)}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.check input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--blue);cursor:pointer}
+input[type=search]{flex:1 1 16rem;min-width:0;min-height:44px;padding:8px 12px;border:1px solid var(--edge);border-radius:6px;background:var(--sheet);color:var(--ink);font:inherit}
+input[type=search]::placeholder{color:var(--pencil)}
+
+/* ---------- lessons ---------- */
+.toc ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,44px);gap:6px}
+.toc button{width:44px;height:44px;border:1px solid var(--edge);border-radius:6px;background:var(--sheet);font-weight:700;font-variant-numeric:tabular-nums}
+.toc button:hover{border-color:var(--ink)}
+.toc button[aria-current="true"]{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.toc .toc-t{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (min-width:640px){.toc ol{grid-template-columns:repeat(12,44px)}}
+/* Wide screens: the number strip becomes a contents page with titles. */
+@media (min-width:1000px){
+  .toc ol{display:block}
+  .toc button{width:100%;height:auto;min-height:44px;display:flex;align-items:center;gap:12px;padding:6px 8px;border:0;border-radius:6px;background:none;text-align:left;font-weight:400}
+  .toc button:hover{background:var(--note)}
+  .toc .toc-t{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;color:var(--pencil);line-height:1.35}
+  .toc .toc-n{flex:none;display:grid;place-items:center;width:1.9rem;height:1.9rem;border-radius:50%;font-weight:700}
+  .toc button[aria-current="true"]{background:none;color:var(--ink)}
+  .toc button[aria-current="true"] .toc-n{background:var(--blue);color:var(--on-blue)}
+  .toc button[aria-current="true"] .toc-t{color:var(--ink);font-weight:700}
+}
+
+.kicker{margin:0 0 4px;color:var(--pencil)}
+.kicker [lang="ja"]{color:var(--ink);font-weight:600;margin-right:10px}
+.goal{margin:0;color:var(--pencil);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:4px 24px;margin:16px 0 0;padding:0;list-style:none;font-size:.9rem;color:var(--pencil)}
+
+/* Particles: the lower two thirds of the line, like a marker stroke. */
+mark.p{background:linear-gradient(transparent 38%,var(--hl) 38%);color:var(--hl-ink);padding:0 .12em;font-weight:600}
+/* Slots: a fill-in blank with a pencilled hint of what goes there. */
+.slot{display:inline-block;min-width:3.4em;margin:0 .15em;padding:0 .3em;border-bottom:2px solid var(--pencil);color:var(--pencil);font-family:var(--f-body);font-size:.7em;font-weight:700;line-height:1.35;text-align:center;vertical-align:.2em}
+
+.entries{list-style:none;margin:0;padding:0}
+.entry{display:grid;grid-template-columns:2rem minmax(0,1fr);column-gap:8px;padding:20px 0;border-top:1px solid var(--rule)}
+.entry-n{font-family:var(--f-jp);font-weight:600;font-size:1.15rem;line-height:1.5;color:var(--pencil)}
+.entry h3{margin:0;font-size:1rem;line-height:1.5;font-weight:700}
+.formula{margin:4px 0 0;font-family:var(--f-jp);font-size:clamp(1.25rem,1.1rem + .8vw,1.5rem);line-height:1.6;overflow-wrap:anywhere}
+.meaning{margin:2px 0 0;color:var(--pencil)}
+.examples{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.examples li{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px}
+.examples [lang="ja"]{font-size:1.125rem}
+.examples .en{color:var(--pencil);font-size:.95rem}
+.note{margin:14px 0 0;padding:10px 14px;border-radius:6px;background:var(--note);font-size:.95rem}
+.table-scroll{margin-top:12px;overflow-x:auto}
+table{border-collapse:collapse;font-size:.95rem}
+th,td{padding:6px 16px 6px 0;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap}
+thead th{font-size:.85rem;color:var(--pencil)}
+tbody th{font-weight:400;color:var(--pencil);font-variant-numeric:tabular-nums}
+td{font-family:var(--f-jp)}
+@media (min-width:720px){.entry{grid-template-columns:3rem minmax(0,1fr)}}
+
+.word-tools{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:8px 0 16px}
+.words{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));column-gap:32px}
+.words li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.words [lang="ja"]{font-size:1.1rem;overflow-wrap:anywhere}
+.words .en{color:var(--pencil);font-size:.92rem;text-align:right}
+
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--rule)}
+.pager button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:44px;padding:10px 14px;background:none;border:1px solid var(--edge);border-radius:6px;text-align:left}
+.pager button:hover{background:var(--note)}
+.pager .next{grid-column:2;align-items:flex-end;text-align:right}
+.pager small{color:var(--pencil);font-size:.85rem}
+
+/* ---------- flashcards: an index card, the one thing lifted off the page ---------- */
+.deck{display:grid;gap:14px;justify-items:center;align-content:start}
+@media (max-width:999.98px){.cards .deck{order:-1}}
+.card{width:100%;max-width:34rem;min-height:16rem;display:flex;flex-direction:column;padding:0 20px 14px;background:var(--sheet);border:1px solid var(--edge);border-radius:4px;box-shadow:0 10px 24px -14px var(--lift);text-align:center}
+.card-head{display:flex;justify-content:space-between;gap:12px;padding:12px 0 8px;border-bottom:2px solid var(--red);color:var(--pencil);font-size:.9rem}
+.card-face{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 0}
+.card-face .big{font-size:clamp(1.9rem,1.4rem + 3vw,2.75rem);line-height:1.3;overflow-wrap:anywhere}
+.card-face .big.en{font-size:clamp(1.4rem,1.2rem + 1.5vw,1.9rem)}
+.card-face .small{color:var(--pencil);font-size:1rem}
+.card-hint{color:var(--pencil);font-size:.88rem}
+.card:hover .card-hint{color:var(--ink)}
+.card-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.card-actions .btn{min-width:8rem}
+.keys{margin:0;color:var(--pencil);font-size:.85rem;text-align:center}
+@media (hover:none){.keys{display:none}}
+.done{width:100%;max-width:34rem;text-align:center}
+.done p{margin:0 0 14px}
+
+/* ---------- quiz: red pen marks, like a marked worksheet ---------- */
+.sheet{padding:20px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+.q-meta{margin:0;color:var(--pencil);font-size:.95rem;font-variant-numeric:tabular-nums}
+.prompt{margin:12px 0 4px;font-size:clamp(1.6rem,1.2rem + 2.4vw,2.25rem);line-height:1.4;text-align:center;overflow-wrap:anywhere}
+.prompt .slot{font-size:.5em}
+.sub{margin:0;color:var(--pencil);text-align:center}
+.choices{display:grid;gap:10px;margin-top:20px}
+@media (min-width:520px){.choices{grid-template-columns:1fr 1fr}}
+.choice{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 14px;background:var(--paper);border:1px solid var(--edge);border-radius:6px;text-align:left;font-size:1.05rem}
+.choice:hover:not(:disabled){border-color:var(--ink)}
+.choice:disabled{cursor:default;color:var(--ink)}
+.choice kbd{flex:none;min-width:1.6rem;border:1px solid var(--rule);border-radius:4px;font:inherit;font-size:.8rem;color:var(--pencil);text-align:center}
+.choice-text{position:relative;overflow-wrap:anywhere}
+.choice [lang="ja"]{font-size:1.15rem}
+.choice .tag{margin-left:auto;padding-left:8px;color:var(--pencil);font-size:.85rem;white-space:nowrap}
+/* Building a sentence: the answer is written on a ruled line, tiles wait underneath. */
+.answer-line{display:flex;flex-wrap:wrap;align-items:center;min-height:64px;margin-top:20px;padding:8px 4px;border-bottom:2px solid var(--pencil)}
+.line-hint{color:var(--pencil);font-size:.95rem}
+.built{position:relative;display:flex;flex-wrap:wrap;gap:8px}
+.tile-bank{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;min-height:52px;margin-top:16px}
+.tile{min-width:44px;min-height:44px;padding:4px 12px;background:var(--paper);border:1px solid var(--edge);border-radius:6px;font-size:1.15rem;line-height:1.3}
+.answer-line .tile{background:var(--sheet)}
+.tile:hover:not(:disabled){border-color:var(--ink)}
+.tile:disabled{cursor:default;color:var(--ink)}
+.is-wrong .tile,.typed-wrap.is-wrong input{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px}
+.q-actions{gap:12px;flex-wrap:wrap}
+.fb-ans{display:block;margin-top:6px;font-weight:400;font-size:1.2rem}
+.typed{display:grid;gap:8px;margin-top:20px}
+.typed label{font-weight:700}
+.typed .hint{margin:0}
+.typed-wrap{position:relative;display:block}
+.typed-wrap input{width:100%;min-height:52px;padding:8px 12px;border:1px solid var(--edge);border-radius:6px;background:var(--paper);color:var(--ink);font-family:var(--f-jp);font-size:1.25rem}
+.is-right .choice-text::after,.answer-line.is-right .built::after,.typed-wrap.is-right::after,.score span::after{content:"";position:absolute;inset:-6px -12px;border:2px solid var(--red);border-radius:50%;transform:rotate(-3deg);pointer-events:none}
+.is-wrong .choice-text{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px}
+.feedback{min-height:1.6em;margin:18px 0 0;font-weight:700;text-align:center}
+.q-actions{display:flex;justify-content:center;margin-top:12px}
+.score{margin:12px 0 4px;font-family:var(--f-jp);font-size:2.75rem;font-weight:600;line-height:1.3;color:var(--red);text-align:center;font-variant-numeric:tabular-nums}
+.score span{position:relative;display:inline-block;padding:0 22px}
+.verdict{margin:0;text-align:center}
+.sheet h2{margin-top:28px;font-size:1.2rem}
+.review{list-style:none;margin:0;padding:0}
+.review li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.review [lang="ja"]{font-size:1.1rem}
+.review .en{color:var(--pencil)}
+
+/* ---------- kana chart ---------- */
+.kana{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-width:32rem}
+.kana-label{grid-column:1/-1;margin:16px 0 2px;color:var(--pencil);font-weight:700;font-size:.95rem}
+.kana-label:first-child{margin-top:0}
+.k{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;padding:6px 2px;background:var(--sheet);border:1px solid var(--rule);border-radius:4px}
+.k [lang="ja"]{font-size:1.8rem;line-height:1.3}
+.k small{min-height:1.35em;color:var(--pencil);font-size:.85rem}
+button.k{border-color:var(--edge)}
+button.k:hover{border-color:var(--ink)}
+button.k[aria-pressed="false"] small{visibility:hidden}
+button.k[aria-pressed="true"]{background:var(--note)}
+.k-gap{visibility:hidden}
+
+@media (forced-colors:active){
+  .tick input:checked+span,.radio input:checked+span,.toc button[aria-current="true"],.toc button[aria-current="true"] .toc-n{forced-color-adjust:none;background:Highlight;color:HighlightText}
+  .tab[aria-selected="true"]::after{background:Highlight}
+  mark.p{forced-color-adjust:none;background:Mark;color:MarkText}
+}

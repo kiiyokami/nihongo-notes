@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nihongo Notes</title>
+  <meta name="description" content="Study notes for Minna no Nihongo lessons 1 to 12: patterns, word lists, flashcards, quizzes and a kana chart.">
+  <script>try{var t=JSON.parse(localStorage.getItem("jn-theme"));if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top"><div class="top-in">
+  <p class="brand"><span lang="ja">にほんご</span> notes</p>
+  <nav class="modes" aria-label="Study mode">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="t-lessons" data-view="lessons" aria-controls="v-lessons" aria-selected="true">Lessons</button>
+      <button class="tab" role="tab" id="t-cards" data-view="cards" aria-controls="v-cards" aria-selected="false" tabindex="-1">Flashcards</button>
+      <button class="tab" role="tab" id="t-quiz" data-view="quiz" aria-controls="v-quiz" aria-selected="false" tabindex="-1">Quiz</button>
+      <button class="tab" role="tab" id="t-kana" data-view="kana" aria-controls="v-kana" aria-selected="false" tabindex="-1">Kana</button>
+    </div>
+  </nav>
+  <button class="theme" id="theme" type="button">Switch to dark</button>
+</div></header>
+
+<main id="main" tabindex="-1">
+  <p class="status" id="boot">Loading lessons…</p>
+  <noscript><p class="status error">This page needs JavaScript to show the lessons. Turn it on and reload.</p></noscript>
+
+  <section class="split" id="v-lessons" role="tabpanel" aria-labelledby="t-lessons" hidden>
+    <nav class="rail toc" aria-label="Lessons"><ol id="toc"></ol></nav>
+    <article class="content" id="lesson"></article>
+  </section>
+
+  <section class="split cards" id="v-cards" role="tabpanel" aria-labelledby="t-cards" hidden>
+    <h1 class="view-title">Flashcards</h1>
+    <div class="rail setup">
+      <fieldset>
+        <legend>Lessons</legend>
+        <div class="ticks" id="c-lessons"></div>
+        <p class="hint" id="c-hint" aria-live="polite"></p>
+      </fieldset>
+      <fieldset>
+        <legend>Show first</legend>
+        <div class="seg">
+          <label class="radio"><input type="radio" name="c-dir" value="jp" checked><span>Japanese</span></label>
+          <label class="radio"><input type="radio" name="c-dir" value="en"><span>English</span></label>
+        </div>
+      </fieldset>
+      <label class="check"><input type="checkbox" id="c-skip"> Skip words I've marked as known</label>
+    </div>
+    <div class="content deck" id="c-stage"></div>
+  </section>
+
+  <section class="split" id="v-quiz" role="tabpanel" aria-labelledby="t-quiz" hidden>
+    <h1 class="view-title">Quiz</h1>
+    <div class="rail setup">
+      <fieldset>
+        <legend>Question type</legend>
+        <div class="seg">
+          <label class="radio"><input type="radio" name="q-type" value="vocab" checked><span>Japanese to English</span></label>
+          <label class="radio"><input type="radio" name="q-type" value="rev"><span>English to Japanese</span></label>
+          <label class="radio"><input type="radio" name="q-type" value="part"><span>Particles</span></label>
+          <label class="radio"><input type="radio" name="q-type" value="num"><span>Numbers</span></label>
+          <label class="radio"><input type="radio" name="q-type" value="sent"><span>Build the sentence</span></label>
+          <label class="radio"><input type="radio" name="q-type" value="qa"><span>Answer the question</span></label>
+        </div>
+      </fieldset>
+      <fieldset id="q-inputset" hidden>
+        <legend>Answer with</legend>
+        <div class="seg">
+          <label class="radio"><input type="radio" name="q-input" value="tiles" checked><span>Word tiles</span></label>
+          <label class="radio"><input type="radio" name="q-input" value="typing"><span>Typing</span></label>
+        </div>
+        <p class="hint" id="q-markhint">Answers are marked against the sentence in your notes, so a different correct wording counts as wrong.</p>
+      </fieldset>
+      <fieldset id="q-lessonset">
+        <legend>Lessons</legend>
+        <div class="ticks" id="q-lessons"></div>
+        <p class="hint" id="q-hint" aria-live="polite"></p>
+      </fieldset>
+      <p class="hint" id="q-partnote" hidden>Particle questions are one mixed set, so the lesson choice doesn't apply.</p>
+      <div><button class="btn" id="q-start" type="button">Start 10 questions</button><p class="hint" id="q-none" aria-live="polite"></p></div>
+    </div>
+    <div class="content" id="q-stage"></div>
+  </section>
+
+  <section class="split" id="v-kana" role="tabpanel" aria-labelledby="t-kana" hidden>
+    <h1 class="view-title">Kana chart</h1>
+    <div class="rail setup">
+      <fieldset>
+        <legend>Script</legend>
+        <div class="seg">
+          <label class="radio"><input type="radio" name="k-set" value="h" checked><span lang="ja">ひらがな</span></label>
+          <label class="radio"><input type="radio" name="k-set" value="k"><span lang="ja">カタカナ</span></label>
+        </div>
+      </fieldset>
+      <label class="check"><input type="checkbox" id="k-hide"> Hide the sounds, tap a letter to check it</label>
+    </div>
+    <div class="content kana" id="kgrid"></div>
+  </section>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# your book and slides: reference only, never committed or deployed
+reference/
+# brainstorming mockups
+.superpowers/
+# build output and dependencies (for the Svelte version)
+node_modules/
+build/
+.svelte-kit/
