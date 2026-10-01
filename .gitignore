@@ -1,8 +1,25 @@
+node_modules
+
+# Output
+.output
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
 # your book and slides: reference only, never committed or deployed
 reference/
 # brainstorming mockups
 .superpowers/
-# build output and dependencies (for the Svelte version)
-node_modules/
-build/
-.svelte-kit/
