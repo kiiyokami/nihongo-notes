@@ -11,12 +11,13 @@ import { lesson as l09 } from './lessons/09';
 import { lesson as l10 } from './lessons/10';
 import { lesson as l11 } from './lessons/11';
 import { lesson as l12 } from './lessons/12';
+import { lesson as l13 } from './lessons/13';
 
 export type { Lesson, Pattern, Table, Word, Example, ParticleQuestion, QAPair } from './types';
 export { particles } from './particles';
 export { qa } from './qa';
 
-export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12];
+export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, l13];
 
 export function getLesson(n: number): Lesson | undefined {
 	return lessons.find((l) => l.n === n);
