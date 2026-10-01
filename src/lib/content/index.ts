@@ -1,0 +1,31 @@
+import type { Lesson } from './types';
+import { lesson as l01 } from './lessons/01';
+import { lesson as l02 } from './lessons/02';
+import { lesson as l03 } from './lessons/03';
+import { lesson as l04 } from './lessons/04';
+import { lesson as l05 } from './lessons/05';
+import { lesson as l06 } from './lessons/06';
+import { lesson as l07 } from './lessons/07';
+import { lesson as l08 } from './lessons/08';
+import { lesson as l09 } from './lessons/09';
+import { lesson as l10 } from './lessons/10';
+import { lesson as l11 } from './lessons/11';
+import { lesson as l12 } from './lessons/12';
+
+export type { Lesson, Pattern, Table, Word, Example, ParticleQuestion, QAPair } from './types';
+export { particles } from './particles';
+export { qa } from './qa';
+
+export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12];
+
+export function getLesson(n: number): Lesson | undefined {
+	return lessons.find((l) => l.n === n);
+}
+
+export interface VocabItem {
+	jp: string;
+	en: string;
+	n: number;
+}
+
+export const vocab: VocabItem[] = lessons.flatMap((l) => l.words.map(([jp, en]) => ({ jp, en, n: l.n })));
