@@ -1,6 +1,6 @@
 # Nihongo Notes
 
-A study app for Minna no Nihongo, lessons 1 to 25: simplified patterns, word lists, flashcards, six kinds of quiz, a kana chart, and a play button that reads Japanese aloud with your device's voice. It works offline and installs like an app.
+My own study app for Minna no Nihongo, lessons 1 to 25: simplified patterns, word lists, flashcards, six kinds of quiz, a kana chart, and a play button that reads Japanese aloud with your device's voice. It works offline and installs like an app.
 
 ## Run it while working on it
 
