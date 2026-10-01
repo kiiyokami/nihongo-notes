@@ -15,12 +15,13 @@ import { lesson as l13 } from './lessons/13';
 import { lesson as l14 } from './lessons/14';
 import { lesson as l15 } from './lessons/15';
 import { lesson as l16 } from './lessons/16';
+import { lesson as l17 } from './lessons/17';
 
 export type { Lesson, Pattern, Table, Word, Example, ParticleQuestion, QAPair } from './types';
 export { particles } from './particles';
 export { qa } from './qa';
 
-export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, l13, l14, l15, l16];
+export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, l13, l14, l15, l16, l17];
 
 export function getLesson(n: number): Lesson | undefined {
 	return lessons.find((l) => l.n === n);
