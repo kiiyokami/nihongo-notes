@@ -1,4 +1,4 @@
-import { BASE, openPage, stubSpeech, suite, text } from './harness.mjs';
+import { BASE, LESSONS, openPage, stubSpeech, suite, text } from './harness.mjs';
 
 const code = (o) => Buffer.from(JSON.stringify(o)).toString('base64');
 const ready = (page) => page.waitForFunction(() => document.querySelector('.hero:not(.waiting)'));
@@ -13,7 +13,7 @@ export default async function (browser) {
 	await ready(page);
 
 	t.check('first visit continues with lesson 1', (await text(page, '.hero a')).includes('lesson 1'));
-	t.check('all 12 chapters listed', (await page.$$('.chapters a')).length === 12);
+	t.check(`all ${LESSONS} chapters listed`, (await page.$$('.chapters a')).length === LESSONS);
 	t.check('ways to study', JSON.stringify(await page.$$eval('.ways a', (as) => as.map((a) => a.getAttribute('href')))) === '["/flashcards/","/quiz/","/kana/"]');
 	t.check('no voice notice when a voice exists', !(await text(page, 'main')).includes('no Japanese voice'));
 

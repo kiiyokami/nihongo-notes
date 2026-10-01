@@ -4,6 +4,8 @@ import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
 
 export const BASE = 'http://localhost:4173';
+// lessons in the app: Minna no Nihongo Beginner 1
+export const LESSONS = 25;
 const FIREFOX = process.env.FIREFOX ?? '/usr/bin/firefox';
 
 // Serves build/ like the real server would. The offline test starts a second one on its own port.

@@ -1,6 +1,6 @@
 # Nihongo Notes
 
-A study app for Minna no Nihongo, lessons 1 to 12: simplified patterns, word lists, flashcards, six kinds of quiz, a kana chart, and a play button that reads Japanese aloud with your device's voice. It works offline and installs like an app.
+A study app for Minna no Nihongo, lessons 1 to 25: simplified patterns, word lists, flashcards, six kinds of quiz, a kana chart, and a play button that reads Japanese aloud with your device's voice. It works offline and installs like an app.
 
 ## Run it while working on it
 
@@ -37,7 +37,7 @@ npm run test:e2e    # builds, then clicks through every page in Firefox
 
 | Path | What's in it |
 | --- | --- |
-| `src/lib/content/lessons/01.ts` … `12.ts` | **Your notes, one lesson per file.** Edit these to add or fix content. |
+| `src/lib/content/lessons/01.ts` … `25.ts` | **Your notes, one lesson per file.** Edit these to add or fix content. |
 | `src/lib/content/particles.ts` | Particle quiz questions |
 | `src/lib/content/qa.ts` | "Answer the question" pairs |
 | `src/lib/study/` | Quiz, flashcard, tile and number logic (no UI) |

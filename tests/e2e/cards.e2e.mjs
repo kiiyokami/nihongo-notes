@@ -1,4 +1,4 @@
-import { BASE, openPage, stubSpeech, suite, text } from './harness.mjs';
+import { BASE, LESSONS, openPage, stubSpeech, suite, text } from './harness.mjs';
 
 export default async function (browser) {
 	const t = suite('cards');
@@ -53,7 +53,7 @@ export default async function (browser) {
 	await page.click('.setup .tick input:checked');
 	t.check('the last ticked lesson stays ticked', (await text(page, '.setup .hint')) === 'Keep at least one lesson ticked.');
 	await page.click('.setup .all');
-	t.check('All lessons', (await page.$$('.setup .tick input:checked')).length === 12);
+	t.check('All lessons', (await page.$$('.setup .tick input:checked')).length === LESSONS);
 	await page.click('.setup .all');
 	t.check('Only lesson 4', (await page.$$('.setup .tick input:checked')).length === 1);
 

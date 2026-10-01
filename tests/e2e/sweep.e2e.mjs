@@ -1,7 +1,7 @@
 // Every page, at five widths, in both themes: no sideways scrolling, every control at least 44px.
 import { BASE, openPage, stubSpeech, suite } from './harness.mjs';
 
-const PAGES = ['/', '/lessons/1/', '/lessons/11/', '/flashcards/', '/quiz/', '/kana/', '/no-such-page/'];
+const PAGES = ['/', '/lessons/1/', '/lessons/11/', '/lessons/25/', '/flashcards/', '/quiz/', '/kana/', '/no-such-page/'];
 const WIDTHS = [360, 390, 768, 1024, 1280];
 
 export default async function (browser) {

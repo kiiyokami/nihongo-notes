@@ -9,6 +9,14 @@ describe('lessons', () => {
 	it('are numbered 1, 2, 3 … in order', () => {
 		expect(lessons.map((l) => l.n)).toEqual(lessons.map((_, i) => i + 1));
 	});
+	it('cover the whole first book, lessons 1 to 25', () => {
+		expect(lessons.length).toBe(25);
+	});
+	it('teach each verb form with a table in the lesson that introduces it', () => {
+		const forms: [number, string][] = [[14, 'て-form'], [17, 'ない-form'], [18, 'dictionary form'], [19, 'た-form'], [20, 'plain']];
+		const missing = forms.filter(([n, form]) => !getLesson(n)?.patterns.some((p) => p.table?.head.some((h) => h.includes(form))));
+		expect(missing).toEqual([]);
+	});
 	for (const l of lessons) {
 		describe(`lesson ${l.n}`, () => {
 			it('has a title, a goal, patterns and words', () => {
