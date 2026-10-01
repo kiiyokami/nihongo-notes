@@ -1,4 +1,4 @@
-/* Minimal manga (see DESIGN.md). Black and white carry everything; yellow only marks a right answer.
+/* Minimal manga. Black and white carry everything; yellow only marks a right answer.
    Contrast, checked with the antislop script: ink on paper 18.9:1, soft on paper 9.7:1, dark soft 10.9:1,
    ink on yellow 14.5:1, soft on subtle 8.7:1 (light) and 9.1:1 (dark). */
 :root {

@@ -24,13 +24,18 @@ export function launch() {
 	return puppeteer.launch({ browser: 'firefox', executablePath: FIREFOX, headless: true });
 }
 
+// Firefox fetches the tab icons after the page has loaded. When a check moves on at that moment, the
+// service worker's answer is cancelled and Firefox logs this. Only icons are let off: the same message
+// for a page or script is a real failure.
+const CANCELLED_ICON = /Failed to load ‘[^’]*\/(favicon\.png|icons\/[^’]*)’\. A ServiceWorker intercepted the request/;
+
 export async function openPage(browser, { width = 1280, height = 900 } = {}) {
 	const page = await browser.newPage();
 	await page.setViewport({ width, height });
 	page.errors = [];
 	page.on('pageerror', (e) => page.errors.push(String(e)));
 	page.on('console', (m) => {
-		if (m.type() === 'error') page.errors.push(m.text());
+		if (m.type() === 'error' && !CANCELLED_ICON.test(m.text())) page.errors.push(m.text());
 	});
 	return page;
 }
