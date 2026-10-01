@@ -20,12 +20,13 @@ import { lesson as l18 } from './lessons/18';
 import { lesson as l19 } from './lessons/19';
 import { lesson as l20 } from './lessons/20';
 import { lesson as l21 } from './lessons/21';
+import { lesson as l22 } from './lessons/22';
 
 export type { Lesson, Pattern, Table, Word, Example, ParticleQuestion, QAPair } from './types';
 export { particles } from './particles';
 export { qa } from './qa';
 
-export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, l13, l14, l15, l16, l17, l18, l19, l20, l21];
+export const lessons: Lesson[] = [l01, l02, l03, l04, l05, l06, l07, l08, l09, l10, l11, l12, l13, l14, l15, l16, l17, l18, l19, l20, l21, l22];
 
 export function getLesson(n: number): Lesson | undefined {
 	return lessons.find((l) => l.n === n);
