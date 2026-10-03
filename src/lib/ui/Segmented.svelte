@@ -63,11 +63,17 @@
 		align-items: center;
 		min-height: 44px;
 		padding: 4px 14px;
-		border: 1px solid var(--ink);
+		border: 1.5px solid var(--line);
+		border-radius: 6px;
+		background: var(--sheet);
+	}
+	input:hover + span {
+		border-color: var(--soft);
 	}
 	input:checked + span {
-		background: var(--ink);
-		color: var(--paper);
+		background: var(--red);
+		border-color: var(--red);
+		color: var(--on-red);
 		font-weight: 700;
 	}
 	input:focus-visible + span {

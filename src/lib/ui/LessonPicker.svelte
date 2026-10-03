@@ -73,13 +73,15 @@
 		min-width: 44px;
 		min-height: 44px;
 		border: 1px dashed var(--soft);
+		border-radius: 6px;
 		color: var(--soft);
 		font-variant-numeric: tabular-nums;
 	}
+	/* several lessons can be ticked at once, so a tick is solid ink, not red (red marks one thing) */
 	.tick input:checked + span {
 		border: 2px solid var(--ink);
 		color: var(--ink);
-		font-weight: 900;
+		font-weight: 700;
 	}
 	.tick input:focus-visible + span {
 		outline: 3px solid var(--ink);
@@ -89,7 +91,8 @@
 		min-height: 44px;
 		padding: 4px 12px;
 		background: none;
-		border: 1px solid var(--ink);
+		border: 1.5px solid var(--ink);
+		border-radius: 6px;
 		font-size: 0.9rem;
 	}
 </style>

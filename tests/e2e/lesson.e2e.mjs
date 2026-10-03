@@ -14,9 +14,11 @@ export default async function (browser) {
 	const panels = (await page.$$('.panels > li')).length;
 	t.check('every pattern is a panel, matching the count in the heading', panels === 8 && (await text(page, 'h2 .count')) === '8', String(panels));
 	t.check('particles are marked', (await page.$$('.panels mark.p')).length > 5);
-	t.check('examples are speech bubbles', (await page.$$('.bubble')).length > 10);
+	t.check('examples are written out, each with a play button', (await page.$$('.panels .ex')).length > 10 && (await page.$$('.panels .ex .speak')).length > 10);
+	t.check('each pattern has a washi tag with its number', (await page.$$eval('.panels > li > .tape', (l) => l.map((e) => e.textContent.trim().split(' ')[0]).join())) === '1,2,3,4,5,6,7,8');
 	t.check('the time-words, months and dates tables are there', (await page.$$('.panels table')).length === 3);
-	t.check('current lesson is marked in the strip', (await text(page, '.strip a[aria-current="page"]')).includes('05'));
+	t.check('current lesson is marked in the index tabs', (await text(page, '.index-tabs a[aria-current="page"]')) === 'Lesson 5: Going places', await text(page, '.index-tabs a[aria-current="page"]'));
+	t.check('the contents list every pattern and the words', (await page.$$eval('.contents a', (l) => l.map((a) => a.getAttribute('href')).join())) === '#p1,#p2,#p3,#p4,#p5,#p6,#p7,#p8,#words');
 
 	const total = await page.$$eval('.words li', (l) => l.length);
 	await page.type('input[type="search"]', 'train');
@@ -27,7 +29,7 @@ export default async function (browser) {
 	await page.click('.words-empty button');
 	t.check('clear brings every word back', (await page.$$eval('.words li', (l) => l.length)) === total);
 
-	const said = await page.$eval('.bubble', (b) => b.textContent.replace(/\s+/g, ' ').trim());
+	const said = await page.$eval('.panels .ex .jp', (b) => b.textContent.replace(/\s+/g, ' ').trim());
 	await page.click('.panels .speak');
 	t.check('play reads the first example', (await page.evaluate(() => window.__said.at(-1))) === said, said);
 	await page.click('.pager a[rel="next"]');

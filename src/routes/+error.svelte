@@ -6,7 +6,7 @@
 <svelte:head><title>{missing ? 'Page not found' : 'Something went wrong'} · Nihongo Notes</title></svelte:head>
 
 <section class="error">
-	<p class="sfx" lang="ja" aria-hidden="true">ガーン</p>
+	<p class="huh" lang="ja" aria-hidden="true">あれ？</p>
 	<h1>{missing ? 'Page not found' : 'Something went wrong'}</h1>
 	<p>{missing ? `There's nothing at ${page.url.pathname}.` : (page.error?.message ?? 'Try going back to the home page.')}</p>
 	<a class="btn" href="/">Go to the home page</a>
@@ -17,9 +17,9 @@
 		max-width: 36rem;
 		padding: 32px 0;
 	}
-	.sfx {
+	.huh {
 		margin: 0;
-		font-family: var(--f-title);
+		color: var(--red);
 		font-size: 2.5rem;
 		transform: rotate(-4deg);
 		display: inline-block;

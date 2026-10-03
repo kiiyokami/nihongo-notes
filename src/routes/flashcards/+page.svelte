@@ -176,33 +176,37 @@
 </div>
 
 <style>
-	@media (min-width: 1000px) {
-		.stage {
-			grid-column: 2;
-			grid-row: 2;
-		}
-		.setup {
-			grid-column: 1;
-			grid-row: 2;
-		}
-	}
+	/* an index card taped to the page, with the red margin line under its heading */
 	.card {
+		position: relative;
 		width: 100%;
 		max-width: 34rem;
-		min-height: 16rem;
-		margin-top: 8px;
+		min-height: 17rem;
+		margin-top: 22px;
 		display: flex;
 		flex-direction: column;
 		padding: 0 20px 14px;
-		background: var(--paper);
-		border: 2px solid var(--ink);
+		background: var(--sheet) repeating-linear-gradient(transparent 0 33px, var(--line) 33px 34px) 0 46px / 100% calc(100% - 46px) no-repeat;
+		border: 1px solid var(--line);
+		box-shadow: 0 8px 18px var(--shadow);
 		text-align: center;
+	}
+	.card::before {
+		content: '';
+		position: absolute;
+		top: -11px;
+		left: 50%;
+		width: 96px;
+		height: 22px;
+		margin-left: -48px;
+		background: var(--t-sakura) repeating-linear-gradient(-45deg, transparent 0 6px, var(--stripe) 6px 9px);
+		transform: rotate(2deg);
 	}
 	.head {
 		display: flex;
 		justify-content: space-between;
-		padding: 10px 0;
-		border-bottom: 1px solid var(--ink);
+		padding: 12px 0 10px;
+		border-bottom: 2px solid var(--red);
 		color: var(--soft);
 		font-size: 0.9rem;
 	}

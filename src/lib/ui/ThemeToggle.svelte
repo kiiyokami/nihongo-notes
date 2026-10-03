@@ -33,7 +33,8 @@
 		min-width: 44px;
 		padding: 0 12px;
 		background: none;
-		border: 1px solid var(--ink);
+		border: 1.5px solid var(--soft);
+		border-radius: 6px;
 		font-weight: 700;
 		font-size: 0.9rem;
 	}

@@ -9,10 +9,6 @@
 </header>
 
 <style>
-	.chapter {
-		padding-bottom: 10px;
-		border-bottom: 2px solid var(--ink);
-	}
 	.kicker {
 		margin: 0;
 		color: var(--soft);
@@ -22,9 +18,9 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
-		column-gap: 14px;
+		column-gap: 12px;
 	}
 	.num {
-		font-size: 1.3em;
+		font-size: 1.4em;
 	}
 </style>

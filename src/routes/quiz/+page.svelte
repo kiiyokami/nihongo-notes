@@ -7,7 +7,8 @@
 	import Segmented from '$lib/ui/Segmented.svelte';
 	import Markup from '$lib/ui/Markup.svelte';
 	import Speak from '$lib/ui/Speak.svelte';
-	import Sfx from '$lib/ui/Sfx.svelte';
+	import Mark from '$lib/ui/Mark.svelte';
+	import Hanamaru from '$lib/ui/Hanamaru.svelte';
 
 	let type = $state<QuizType>('vocab');
 	let input = $state<InputMode>('tiles');
@@ -165,7 +166,10 @@
 	<section class="stage" aria-label="Question">
 		{#if done}
 			<p class="meta">Round finished</p>
-			<p class="score" tabindex="-1" bind:this={scoreEl}><span class="sr">{'Score: '}</span>{score} / {round.length}</p>
+			<div class="result">
+				<p class="score" tabindex="-1" bind:this={scoreEl}><span class="sr">{'Score: '}</span>{score} / {round.length}</p>
+				{#if score === round.length}<Hanamaru />{/if}
+			</div>
 			<p>{misses.length ? `Go over the ${misses.length === 1 ? 'one' : misses.length} you missed, then try another round.` : 'Every answer right.'}</p>
 			{#if misses.length}
 				<h2>To go over</h2>
@@ -201,8 +205,8 @@
 						<button type="button" class="choice" class:right={isAns} class:wrong={isPick} disabled={answered} onclick={() => choose(k)}>
 							<kbd aria-hidden="true">{k + 1}</kbd>
 							<span class="text" lang={q.optionsJa ? 'ja' : undefined}>{o}</span>
-							{#if isAns}<Sfx kind="right" /><span class="sr">(the answer)</span>{/if}
-							{#if isPick}<Sfx kind="wrong" /><span class="sr">(your pick)</span>{/if}
+							{#if isAns}<Mark kind="right" /><span class="sr">(the answer)</span>{/if}
+							{#if isPick}<Mark kind="wrong" /><span class="sr">(your pick)</span>{/if}
 						</button>
 					{/each}
 				</div>
@@ -213,7 +217,7 @@
 					{:else}
 						<span class="line-hint">Tap the tiles below in order</span>
 					{/each}
-					{#if answered}<Sfx kind={correct ? 'right' : 'wrong'} />{/if}
+					{#if answered}<Mark kind={correct ? 'right' : 'wrong'} />{/if}
 				</div>
 				<div class="bank" role="group" aria-label="Word tiles" bind:this={bankEl}>
 					{#each bank as k, pos (k)}
@@ -238,7 +242,7 @@
 					<label for="q-typed">Your answer in Japanese</label>
 					<span class="typed-wrap" class:right={answered && correct} class:wrong={answered && !correct}>
 						<input id="q-typed" lang="ja" bind:this={typedEl} bind:value={typed} oninput={() => (nudge = '')} readonly={answered} autocapitalize="off" spellcheck="false" aria-describedby="q-prompt" />
-						{#if answered}<Sfx kind={correct ? 'right' : 'wrong'} />{/if}
+						{#if answered}<Mark kind={correct ? 'right' : 'wrong'} />{/if}
 					</span>
 					<p class="hint">{q.hint}</p>
 					{#if !answered}<div class="actions"><button type="submit" class="btn" id="q-check">Check</button></div>{/if}
@@ -270,7 +274,8 @@
 		overflow-wrap: anywhere;
 	}
 	.prompt.en {
-		font-family: var(--f-title);
+		font-family: var(--f-hand);
+		font-weight: 600;
 	}
 	.prompt :global(.slot) {
 		font-size: 0.5em;
@@ -297,21 +302,25 @@
 		gap: 12px;
 		min-height: 52px;
 		padding: 10px 14px;
-		background: var(--paper);
-		border: 1px solid var(--ink);
+		background: var(--sheet);
+		border: 1.5px solid var(--line);
+		border-radius: 8px;
 		text-align: left;
 		font-size: 1.05rem;
 	}
 	.choice:hover:not(:disabled) {
-		outline: 1px solid var(--ink);
+		border-color: var(--ink);
 	}
 	.choice:disabled {
 		cursor: default;
 		color: var(--ink);
 	}
+	/* marked in red pen, like a teacher marking a test */
 	.choice.right {
-		background: var(--accent);
-		color: var(--on-accent);
+		border-color: var(--red);
+	}
+	.choice.wrong {
+		color: var(--soft);
 	}
 	.choice.wrong .text,
 	.line.wrong .tile,
@@ -322,15 +331,12 @@
 	kbd {
 		flex: none;
 		min-width: 1.6rem;
-		border: 1px solid var(--soft);
+		border: 1px solid var(--line);
+		border-radius: 4px;
 		font: inherit;
 		font-size: 0.8rem;
 		color: var(--soft);
 		text-align: center;
-	}
-	.choice.right kbd {
-		color: var(--on-accent);
-		border-color: var(--on-accent);
 	}
 	.text {
 		overflow-wrap: anywhere;
@@ -346,8 +352,7 @@
 		border-bottom: 2px solid var(--ink);
 	}
 	.line.right {
-		background: var(--accent);
-		color: var(--on-accent);
+		border-bottom-color: var(--red);
 	}
 	.line-hint {
 		color: var(--soft);
@@ -365,14 +370,10 @@
 		min-width: 44px;
 		min-height: 44px;
 		padding: 4px 12px;
-		background: var(--paper);
-		border: 1px solid var(--ink);
+		background: var(--sheet);
+		border: 1.5px solid var(--soft);
+		border-radius: 6px;
 		font-size: 1.15rem;
-	}
-	.line.right .tile {
-		background: transparent;
-		color: var(--on-accent);
-		border-color: var(--on-accent);
 	}
 	.tile:disabled {
 		cursor: default;
@@ -393,17 +394,17 @@
 		align-items: center;
 		gap: 8px;
 	}
-	.typed-wrap.right {
-		background: var(--accent);
-		color: var(--on-accent);
+	.typed-wrap.right input {
+		border-color: var(--red);
 	}
 	input {
 		flex: 1;
 		min-width: 0;
 		min-height: 52px;
 		padding: 8px 12px;
-		border: 1px solid var(--ink);
-		background: var(--paper);
+		border: 1.5px solid var(--soft);
+		border-radius: 6px;
+		background: var(--sheet);
 		color: var(--ink);
 		font-size: 1.25rem;
 	}
@@ -418,10 +419,16 @@
 		font-weight: 400;
 		font-size: 1.2rem;
 	}
+	.result {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+	}
 	.score {
 		margin: 8px 0;
-		font-family: var(--f-title);
-		font-size: 2.75rem;
+		font-family: var(--f-hand);
+		font-weight: 600;
+		font-size: 3rem;
 		font-variant-numeric: tabular-nums;
 	}
 	.review {
@@ -434,7 +441,7 @@
 		flex-wrap: wrap;
 		gap: 4px 16px;
 		padding: 8px 0;
-		border-bottom: 1px solid var(--subtle);
+		border-bottom: 1px dashed var(--line);
 	}
 	.review .ja {
 		font-size: 1.1rem;

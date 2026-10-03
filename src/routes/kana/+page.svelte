@@ -77,14 +77,22 @@
 		justify-content: center;
 		min-height: 64px;
 		padding: 6px 2px;
-		background: var(--paper);
-		border: 1px solid var(--subtle);
+		border: 1px solid var(--line);
+		/* genkō yōshi: a writing square with faint centre guides */
+		background:
+			linear-gradient(to right, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+			linear-gradient(transparent calc(42% - 0.5px), var(--line) calc(42% - 0.5px) calc(42% + 0.5px), transparent calc(42% + 0.5px)),
+			var(--sheet);
 	}
 	button.k {
+		border-color: var(--soft);
+		border-radius: 4px;
+	}
+	button.k:hover {
 		border-color: var(--ink);
 	}
 	button.k[aria-pressed='true'] {
-		background: var(--subtle);
+		border-color: var(--red);
 	}
 	.k [lang='ja'] {
 		font-size: 1.8rem;

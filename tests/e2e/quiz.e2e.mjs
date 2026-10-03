@@ -10,8 +10,8 @@ async function lookup(page, kind) {
 			const li = [...doc.querySelectorAll('.words li')].find((l) => l.querySelector('.jp').textContent.trim() === prompt);
 			return li?.querySelector('.en').textContent.trim();
 		}
-		const wrap = [...doc.querySelectorAll('.bubbles .wrap')].find((w) => w.querySelector('.en')?.textContent.trim() === prompt);
-		return wrap?.querySelector('.bubble').textContent.replace(/\s+/g, '').replace(/[。？]$/, '');
+		const ex = [...doc.querySelectorAll('.examples .ex')].find((w) => w.querySelector('.en')?.textContent.trim() === prompt);
+		return ex?.querySelector('.jp').textContent.replace(/\s+/g, '').replace(/[。？]$/, '');
 	}, kind);
 }
 
@@ -53,12 +53,12 @@ export default async function (browser) {
 	t.check('focus moves to the question', (await page.evaluate(() => document.activeElement?.classList.contains('prompt'))) === true);
 	const right = await lookup(page, 'word');
 	for (const b of await page.$$('.choice')) if ((await b.evaluate((e) => e.querySelector('.text').textContent)) === right) await b.click();
-	t.check('the right meaning gets ピンポーン and Right.', (await fb()) === 'Right.' && (await text(page, '.choice.right .sfx')) === 'ピンポーン', right);
+	t.check('the right meaning gets a red まる and Right.', (await fb()) === 'Right.' && !!(await page.$('.choice.right .mark[data-mark="right"]')), right);
 	t.check('Next takes focus', (await page.evaluate(() => document.activeElement?.textContent?.trim())) === 'Next question');
 	await page.keyboard.press('Enter');
 	const right2 = await lookup(page, 'word');
 	for (const b of await page.$$('.choice')) if ((await b.evaluate((e) => e.querySelector('.text').textContent)) !== right2) { await b.click(); break; }
-	t.check('a wrong pick gets ブブー and the answer', (await fb()).startsWith('Not this one. The answer is') && (await text(page, '.choice.wrong .sfx')) === 'ブブー');
+	t.check('a wrong pick gets a red cross and the answer', (await fb()).startsWith('Not this one. The answer is') && !!(await page.$('.choice.wrong .mark[data-mark="wrong"]')) && !!(await page.$('.choice.right .mark[data-mark="right"]')));
 	await page.click('.stage .actions .btn');
 	await page.keyboard.press('2');
 	t.check('number keys answer', (await fb()).length > 0);
@@ -88,7 +88,7 @@ export default async function (browser) {
 	const tiles = await page.$$eval('.bank .tile', (l) => l.map((b) => b.textContent));
 	for (const w of spell(target, tiles) ?? []) await clickTile(page, w);
 	await page.click('#q-check');
-	t.check('the right order gets Right.', (await fb()) === 'Right.' && !!(await page.$('.line.right')), target);
+	t.check('the right order gets Right. and a まる', (await fb()) === 'Right.' && !!(await page.$('.line.right .mark[data-mark="right"]')), target);
 
 	await page.click('.setup input[value="typing"]');
 	await start();

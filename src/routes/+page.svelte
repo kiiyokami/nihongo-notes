@@ -4,6 +4,7 @@
 	import { speech } from '$lib/speech/speech.svelte';
 	import { decodeImport, mergeKnown } from '$lib/state/importcode';
 	import Markup from '$lib/ui/Markup.svelte';
+	import { blockOf } from '$lib/study/blocks';
 
 	const current = $derived(getLesson(app.lastLesson) ?? lessons[0]);
 	const pad = (n: number) => String(n).padStart(2, '0');
@@ -34,100 +35,127 @@
 
 <h1 class="sr">Nihongo Notes</h1>
 
-<!-- hidden until saved progress is loaded, so it never flashes lesson 1 for a returning learner -->
-<section class="hero" class:waiting={!app.ready} aria-labelledby="continue">
-	<p class="kicker" id="continue"><span lang="ja">続き</span> Continue</p>
-	<p class="chapter"><span class="num">{pad(current.n)}</span> <Markup text={current.title} /></p>
-	<a class="btn" href="/lessons/{current.n}/">Open lesson {current.n}</a>
-</section>
+<div class="home">
+	<div class="left">
+		<!-- hidden until saved progress is loaded, so it never flashes lesson 1 for a returning learner -->
+		<section class="sheet hero b-{blockOf(current.n)}" class:waiting={!app.ready} aria-labelledby="continue">
+			<span class="tape" id="continue"><span><span lang="ja">続き</span> · Continue</span></span>
+			<p class="chapter"><span class="num">{pad(current.n)}</span> <Markup text={current.title} /></p>
+			<p class="goal"><Markup text={current.goal} /></p>
+			<a class="btn" href="/lessons/{current.n}/">Open lesson {current.n}</a>
+		</section>
 
-<nav class="ways" aria-label="Ways to study">
-	<a class="btn outline" href="/flashcards/">Flashcards</a>
-	<a class="btn outline" href="/quiz/">Quiz</a>
-	<a class="btn outline" href="/kana/">Kana chart</a>
-</nav>
+		<nav class="ways" aria-label="Ways to study">
+			<a class="btn outline" href="/flashcards/">Flashcards</a>
+			<a class="btn outline" href="/quiz/">Quiz</a>
+			<a class="btn outline" href="/kana/">Kana chart</a>
+		</nav>
 
-<h2>Lessons</h2>
-<ol class="chapters">
-	{#each lessons as l (l.n)}
-		<li>
-			<a href="/lessons/{l.n}/"><span class="num">{pad(l.n)}</span><span><Markup text={l.title} /></span></a>
-		</li>
-	{/each}
-</ol>
+		{#if app.ready && !app.storageOk}
+			<p class="notice">Your browser isn't saving progress (private mode or storage full).</p>
+		{/if}
+		{#if speech.checked && !speech.voiceReady}
+			<p class="notice">This device has no Japanese voice, so the play buttons are hidden.</p>
+		{/if}
 
-{#if app.ready && !app.storageOk}
-	<p class="notice">Your browser isn't saving progress (private mode or storage full).</p>
-{/if}
-{#if speech.checked && !speech.voiceReady}
-	<p class="notice">This device has no Japanese voice, so the play buttons are hidden.</p>
-{/if}
+		<details class="import">
+			<summary>Import from the old site</summary>
+			<form onsubmit={runImport}>
+				<label for="import-code">Paste the code from “Export my progress” on the old site</label>
+				<textarea id="import-code" rows="3" bind:value={code}></textarea>
+				<button class="btn" type="submit" disabled={!code.trim()}>Import</button>
+			</form>
+			<p class="hint" aria-live="polite">{importMsg}</p>
+		</details>
+	</div>
 
-<details class="import">
-	<summary>Import from the old site</summary>
-	<form onsubmit={runImport}>
-		<label for="import-code">Paste the code from “Export my progress” on the old site</label>
-		<textarea id="import-code" rows="3" bind:value={code}></textarea>
-		<button class="btn" type="submit" disabled={!code.trim()}>Import</button>
-	</form>
-	<p class="hint" aria-live="polite">{importMsg}</p>
-</details>
+	<section class="sheet right" aria-labelledby="lessons-title">
+		<h2 id="lessons-title">Lessons</h2>
+		<ol class="chapters">
+			{#each lessons as l (l.n)}
+				<li class="b-{blockOf(l.n)}">
+					<a href="/lessons/{l.n}/" aria-current={l.n === current.n ? 'true' : undefined}><span class="num">{l.n}</span><span class="t"><Markup text={l.title} /></span></a>
+				</li>
+			{/each}
+		</ol>
+	</section>
+</div>
 
 <style>
+	.home {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 24px;
+	}
+	.left {
+		display: grid;
+		gap: 20px;
+		align-content: start;
+	}
 	.hero {
-		padding: 16px 0 24px;
-		border-bottom: 2px solid var(--ink);
+		padding-top: 30px;
 	}
 	.waiting {
 		visibility: hidden;
 	}
-	.kicker {
-		margin: 0;
-		color: var(--soft);
-		font-weight: 700;
-	}
 	.chapter {
-		margin: 4px 0 16px;
-		font-family: var(--f-title);
-		font-size: clamp(1.8rem, 1.3rem + 2.4vw, 2.6rem);
+		margin: 0;
+		font-family: var(--f-hand);
+		font-weight: 600;
+		font-size: clamp(1.7rem, 1.3rem + 2vw, 2.4rem);
 		line-height: 1.2;
 	}
 	.chapter .num {
-		font-size: 1.3em;
+		font-size: 1.4em;
 		margin-right: 10px;
+	}
+	.goal {
+		margin: 8px 0 18px;
+		color: var(--soft);
 	}
 	.ways {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
-		margin-top: 24px;
+	}
+	.right h2 {
+		margin-top: 0;
 	}
 	.chapters {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-		column-gap: 32px;
+		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+		column-gap: 28px;
 	}
 	.chapters a {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		gap: 14px;
 		min-height: 52px;
-		padding: 12px 0;
-		border-bottom: 1px solid var(--subtle);
+		padding: 6px 0;
+		border-bottom: 1px dashed var(--line);
 		text-decoration: none;
 	}
-	.chapters a:hover {
+	.chapters a:hover .t {
 		text-decoration: underline;
 	}
 	.chapters .num {
-		font-family: var(--f-title);
-		font-size: 1.2rem;
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 2.4rem;
+		height: 2rem;
+		background: var(--tint);
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+	}
+	.chapters a[aria-current] .num {
+		background: var(--red);
+		color: var(--on-red);
 	}
 	.import {
-		margin-top: 40px;
 		max-width: 36rem;
 	}
 	summary {
@@ -145,9 +173,34 @@
 	textarea {
 		width: 100%;
 		padding: 8px;
-		border: 1px solid var(--ink);
-		background: var(--paper);
+		border: 1px solid var(--soft);
+		border-radius: 6px;
+		background: var(--sheet);
 		font-size: 0.85rem;
 		word-break: break-all;
+	}
+	/* on a computer: an open notebook, what to do next on the left, every lesson on the right */
+	@media (min-width: 1000px) {
+		.home {
+			grid-template-columns: 22rem minmax(0, 1fr);
+			gap: 0;
+			box-shadow: 0 10px 26px var(--shadow);
+		}
+		.left {
+			background: var(--sheet);
+			padding: 36px 30px;
+			box-shadow: inset -16px 0 18px -16px var(--shadow);
+		}
+		.left .hero.sheet {
+			box-shadow: none;
+			padding: 30px 0 0;
+		}
+		.left .hero > .tape:first-child {
+			left: 0;
+		}
+		.right.sheet {
+			padding: 36px 40px;
+			box-shadow: inset 16px 0 18px -16px var(--shadow);
+		}
 	}
 </style>
