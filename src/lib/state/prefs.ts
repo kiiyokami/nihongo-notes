@@ -1,5 +1,7 @@
 // Saved settings are checked on the way in, so an old or damaged value falls back to the default.
 import type { QuizType, InputMode } from '$lib/study/quiz';
+import type { Schedule } from '$lib/study/srs';
+import { KINDS, type Days, type Kind } from '$lib/study/days';
 
 export type Theme = 'light' | 'dark' | null;
 export interface QuizPrefs {
@@ -44,4 +46,26 @@ export function cleanQuiz(v: unknown, valid: readonly number[]): QuizPrefs {
 export function cleanCards(v: unknown, valid: readonly number[]): CardPrefs {
 	const o = obj(v);
 	return { dir: o.dir === 'en' ? 'en' : 'jp', skipKnown: o.skipKnown === true, lessons: cleanLessons(o.lessons, valid) };
+}
+
+export function cleanSchedule(v: unknown): Schedule {
+	const out: Schedule = {};
+	if (Array.isArray(v)) return out;
+	for (const [jp, rec] of Object.entries(obj(v))) {
+		if (!jp || !Array.isArray(rec) || rec.length !== 2) continue;
+		const [box, due] = rec;
+		if (Number.isInteger(box) && box >= 1 && box <= 6 && Number.isInteger(due)) out[jp] = [box, due];
+	}
+	return out;
+}
+
+export function cleanDays(v: unknown): Days {
+	const out: Days = {};
+	if (Array.isArray(v)) return out;
+	for (const [k, kinds] of Object.entries(obj(v))) {
+		if (!/^\d+$/.test(k) || !Array.isArray(kinds)) continue;
+		const ok = [...new Set(kinds.filter((x): x is Kind => (KINDS as readonly unknown[]).includes(x)))];
+		if (ok.length) out[Number(k)] = ok;
+	}
+	return out;
 }

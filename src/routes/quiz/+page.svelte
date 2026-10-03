@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
+	import { page } from '$app/state';
 	import { lessons } from '$lib/content';
-	import { app, save } from '$lib/state/app.svelte';
+	import { app, save, logToday } from '$lib/state/app.svelte';
+	import { recentLessons } from '$lib/study/today';
+	import { lessonsText } from '$lib/study/text';
 	import { QUIZ_TYPES, buildRound, isRight, startState, usesInput, usesLessons, type InputMode, type Question, type QuizType } from '$lib/study/quiz';
 	import LessonPicker from '$lib/ui/LessonPicker.svelte';
 	import Segmented from '$lib/ui/Segmented.svelte';
@@ -9,11 +12,15 @@
 	import Speak from '$lib/ui/Speak.svelte';
 	import Mark from '$lib/ui/Mark.svelte';
 	import Hanamaru from '$lib/ui/Hanamaru.svelte';
+	import TodayNext from '$lib/ui/TodayNext.svelte';
 
 	let type = $state<QuizType>('vocab');
 	let input = $state<InputMode>('tiles');
 	let picked = $state<number[]>([]);
 	let loaded = $state(false);
+	// 'today' is the quick quiz from today's page (/quiz/?today): words from the recent lessons, started straight away
+	let mode = $state<'today' | 'own' | null>(null);
+	let logged = $state(false);
 
 	let round = $state<Question[]>([]);
 	let qi = $state(0);
@@ -40,14 +47,35 @@
 	const bank = $derived(q?.mode === 'tiles' ? q.tiles.map((_, k) => k).filter((k) => !line.includes(k)) : []);
 
 	$effect(() => {
-		if (!app.ready || loaded) return;
-		type = app.quiz.type;
-		input = app.quiz.input;
-		picked = app.quiz.lessons.length ? [...app.quiz.lessons] : lessons.map((l) => l.n);
-		loaded = true;
+		if (!app.ready) return;
+		const want = page.url.searchParams.has('today') ? 'today' : 'own';
+		if (want === mode) return;
+		untrack(() => {
+			mode = want;
+			input = app.quiz.input;
+			playing = false;
+			if (want === 'today') {
+				type = 'vocab';
+				picked = recentLessons(app.lastLesson);
+				loaded = true;
+				begin();
+			} else {
+				type = app.quiz.type;
+				picked = app.quiz.lessons.length ? [...app.quiz.lessons] : lessons.map((l) => l.n);
+				loaded = true;
+			}
+		});
+	});
+	// a finished round ticks off today's quiz
+	$effect(() => {
+		if (!done || logged) return;
+		logged = true;
+		untrack(() => logToday('quiz'));
 	});
 
 	function persist() {
+		// the quick quiz has its own lessons and type, so it never changes your saved settings
+		if (mode === 'today') return;
 		app.quiz = { type, input, lessons: [...picked] };
 		save('quiz');
 	}
@@ -56,6 +84,7 @@
 		qi = 0;
 		score = 0;
 		misses = [];
+		logged = false;
 		playing = true;
 		await show();
 	}
@@ -136,6 +165,11 @@
 	<div class="setup">
 		{#if !loaded}
 			<p class="status">Loading your settings…</p>
+		{:else if mode === 'today'}
+			<div class="today-note">
+				<p><span class="k">Quick quiz from today's page</span>{start.size} words from {lessonsText(new Set(picked), lessons.length)}</p>
+				<a class="btn outline" href="/quiz/">Choose your own quiz</a>
+			</div>
 		{:else}
 			<Segmented legend="Question type" name="qtype" options={QUIZ_TYPES} bind:value={type} onchange={persist} />
 			{#if usesInput(type)}
@@ -182,7 +216,11 @@
 					{/each}
 				</ul>
 			{/if}
-			<div class="actions"><button type="button" class="btn" onclick={begin}>Another round</button></div>
+			{#if mode === 'today'}
+				<TodayNext />
+			{:else}
+				<div class="actions"><button type="button" class="btn" onclick={begin}>Another round</button></div>
+			{/if}
 		{:else if playing && q}
 			<p class="meta">Question {qi + 1} of {round.length}{q.meta ? ` · ${q.meta}` : ''}</p>
 			<div class="ask">
@@ -260,6 +298,19 @@
 </div>
 
 <style>
+	.today-note p {
+		margin: 0 0 12px;
+		font-family: var(--f-hand);
+		font-weight: 600;
+		font-size: 1.2rem;
+	}
+	.today-note .k {
+		display: block;
+		font-family: var(--f-ui);
+		font-weight: 400;
+		font-size: 0.85rem;
+		color: var(--soft);
+	}
 	.ask {
 		display: flex;
 		align-items: center;

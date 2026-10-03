@@ -20,11 +20,13 @@
 	beforeNavigate(() => stopSpeech());
 
 	const modes = $derived([
-		{ href: `/lessons/${app.lastLesson}/`, base: '/lessons/', label: 'Lessons' },
-		{ href: '/flashcards/', base: '/flashcards/', label: 'Flashcards' },
-		{ href: '/quiz/', base: '/quiz/', label: 'Quiz' },
-		{ href: '/kana/', base: '/kana/', label: 'Kana' }
+		{ href: '/', base: '/', label: 'Today', short: '' },
+		{ href: `/lessons/${app.lastLesson}/`, base: '/lessons/', label: 'Lessons', short: '' },
+		{ href: '/flashcards/', base: '/flashcards/', label: 'Flashcards', short: 'Cards' },
+		{ href: '/quiz/', base: '/quiz/', label: 'Quiz', short: '' },
+		{ href: '/kana/', base: '/kana/', label: 'Kana', short: '' }
 	]);
+	const here = (base: string) => (base === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(base));
 </script>
 
 <a class="skip" href="#main">Skip to content</a>
@@ -33,7 +35,9 @@
 		<a class="wordmark" href="/" lang="ja" aria-label="Nihongo Notes, home">にほんご帳</a>
 		<nav class="modes" aria-label="Study modes">
 			{#each modes as m (m.base)}
-				<a href={m.href} aria-current={page.url.pathname.startsWith(m.base) ? 'page' : undefined}>{m.label}</a>
+				<a href={m.href} aria-current={here(m.base) ? 'page' : undefined}>
+					{#if m.short}<span class="long">{m.label}</span><span class="short">{m.short}</span>{:else}{m.label}{/if}
+				</a>
 			{/each}
 		</nav>
 		<ThemeToggle />
@@ -105,12 +109,17 @@
 		text-decoration: underline 2px;
 		text-underline-offset: 8px;
 	}
+	@media (min-width: 720px) {
+		.modes .short {
+			display: none;
+		}
+	}
 	main {
 		max-width: 72rem;
 		margin: 0 auto;
 		padding: 28px var(--gutter) 64px;
 	}
-	/* on phones the four modes move to a bottom bar, one thumb away */
+	/* on phones the five modes move to a bottom bar, one thumb away */
 	@media (max-width: 719.98px) {
 		.modes {
 			position: fixed;
@@ -119,7 +128,7 @@
 			bottom: 0;
 			z-index: 10;
 			display: grid;
-			grid-template-columns: repeat(4, 1fr);
+			grid-template-columns: repeat(5, 1fr);
 			gap: 0;
 			background: var(--sheet);
 			border-top: 1px solid var(--line);
@@ -131,6 +140,9 @@
 			min-height: 56px;
 			padding: 0 4px;
 			font-size: 0.9rem;
+		}
+		.modes .long {
+			display: none;
 		}
 		main {
 			padding-top: 20px;

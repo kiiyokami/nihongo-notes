@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
+	import { page } from '$app/state';
 	import { lessons, vocab } from '$lib/content';
-	import { app, save, setKnown, forget } from '$lib/state/app.svelte';
+	import { app, save, gradeWord, forget, logToday } from '$lib/state/app.svelte';
+	import { reviewNow } from '$lib/state/today.svelte';
 	import { buildDeck, putBack, roundResult, type Card } from '$lib/study/deck';
+	import { shuffle } from '$lib/study/random';
 	import { lessonsText } from '$lib/study/text';
 	import LessonPicker from '$lib/ui/LessonPicker.svelte';
 	import Segmented from '$lib/ui/Segmented.svelte';
 	import Speak from '$lib/ui/Speak.svelte';
 	import Markup from '$lib/ui/Markup.svelte';
+	import TodayNext from '$lib/ui/TodayNext.svelte';
 
 	let picked = $state<number[]>([]);
 	let dir = $state<'jp' | 'en'>('jp');
@@ -17,6 +21,11 @@
 	let flipped = $state(false);
 	let started = $state(false);
 	let stageEl = $state<HTMLElement>();
+	// 'review' is today's review (/flashcards/?review); 'pick' is cards from the lessons you tick
+	let mode = $state<'review' | 'pick' | null>(null);
+	let fresh = $state(new Set<string>());
+	let dueCount = $state(0);
+	let logged = $state(false);
 
 	const known = $derived(new Set(app.known));
 	const which = $derived(lessonsText(picked, lessons.length));
@@ -26,12 +35,26 @@
 	const jpShown = $derived((dir === 'jp') !== flipped);
 
 	$effect(() => {
-		if (!app.ready || started) return;
-		picked = app.cards.lessons.length ? [...app.cards.lessons] : [app.lastLesson];
-		dir = app.cards.dir;
-		skipKnown = app.cards.skipKnown;
-		rebuild();
-		started = true;
+		if (!app.ready) return;
+		const want = page.url.searchParams.has('review') ? 'review' : 'pick';
+		if (want === mode) return;
+		untrack(() => {
+			mode = want;
+			picked = app.cards.lessons.length ? [...app.cards.lessons] : [app.lastLesson];
+			dir = app.cards.dir;
+			skipKnown = app.cards.skipKnown;
+			rebuild();
+			started = true;
+		});
+	});
+	// a finished round counts as studying today; finishing today's review ticks it off
+	$effect(() => {
+		if (!started || logged || !deck.length || i < deck.length) return;
+		logged = true;
+		untrack(() => {
+			logToday('cards');
+			if (mode === 'review') logToday('review');
+		});
 	});
 
 	function persist() {
@@ -39,9 +62,18 @@
 		save('cards');
 	}
 	function rebuild() {
-		deck = buildDeck(vocab, new Set(picked), skipKnown ? known : null);
+		if (mode === 'review') {
+			const r = reviewNow();
+			deck = [...shuffle(r.due), ...shuffle(r.fresh)];
+			fresh = new Set(r.fresh.map((c) => c.jp));
+			dueCount = r.due.length;
+		} else {
+			deck = buildDeck(vocab, new Set(picked), skipKnown ? known : null);
+			fresh = new Set();
+		}
 		i = 0;
 		flipped = false;
+		logged = false;
 	}
 	// keep keyboard users on the card after it changes
 	async function keepFocus(had: boolean) {
@@ -57,7 +89,7 @@
 	}
 	function mark(ok: boolean) {
 		const had = focusInStage();
-		setKnown(card.jp, ok);
+		gradeWord(card.jp, ok);
 		if (!ok) deck = putBack(deck, i);
 		i++;
 		flipped = false;
@@ -91,6 +123,11 @@
 	<section class="stage" bind:this={stageEl} aria-label="Cards">
 		{#if !started}
 			<p class="status">Getting your cards ready…</p>
+		{:else if mode === 'review' && !deck.length}
+			<div class="status">
+				<p>Nothing to review today. Every word you've seen is waiting for a later day.</p>
+				<TodayNext />
+			</div>
 		{:else if !deck.length}
 			<div class="status">
 				{#if anyWords}
@@ -113,19 +150,24 @@
 			</div>
 		{:else if i >= deck.length}
 			<div class="status">
-				<p class="meta">Round finished</p>
+				<p class="meta">{mode === 'review' ? "Today's review finished" : 'Round finished'}</p>
 				<p>You marked {result.known} of {result.total} words as known.</p>
-				<div class="actions">
-					<button type="button" class="btn" onclick={rebuild}>Go through again</button>
-					{#if result.known < result.total}
-						<button type="button" class="btn outline" onclick={() => setSkip(true)}>Only the {result.total - result.known} not known yet</button>
-					{/if}
-				</div>
+				{#if mode === 'review'}
+					<p>Words you missed come back tomorrow. The rest wait longer each time you get them right.</p>
+					<TodayNext />
+				{:else}
+					<div class="actions">
+						<button type="button" class="btn" onclick={rebuild}>Go through again</button>
+						{#if result.known < result.total}
+							<button type="button" class="btn outline" onclick={() => setSkip(true)}>Only the {result.total - result.known} not known yet</button>
+						{/if}
+					</div>
+				{/if}
 			</div>
 		{:else}
 			<p class="meta">Card {i + 1} of {deck.length}</p>
 			<button type="button" class="card" onclick={flip}>
-				<span class="head"><span>Lesson {card.n}</span><span>{known.has(card.jp) ? 'marked known' : ''}</span></span>
+				<span class="head"><span>Lesson {card.n}</span><span>{fresh.has(card.jp) ? 'new word' : known.has(card.jp) ? 'marked known' : ''}</span></span>
 				<!-- keyed on the flip, so the answer pops in each time it is revealed -->
 				{#key flipped}<span class="face" class:pop={flipped}>
 					{#if jpShown}
@@ -148,7 +190,26 @@
 	</section>
 
 	<div class="setup">
-		{#if started}
+		{#if started && mode === 'review'}
+			<div class="review-note">
+				<p><span class="k">Today's review</span>{dueCount} due, {fresh.size} new</p>
+				<p class="hint">Words come back after 1, 3, 7, 14, 30 and 60 days as you keep getting them right. A miss brings a word back tomorrow.</p>
+				<a class="btn outline" href="/flashcards/">Choose lessons instead</a>
+			</div>
+			<Segmented
+				legend="Show first"
+				name="dir"
+				options={[
+					{ value: 'jp', label: 'Japanese' },
+					{ value: 'en', label: 'English' }
+				]}
+				bind:value={dir}
+				onchange={() => {
+					persist();
+					flipped = false;
+				}}
+			/>
+		{:else if started}
 			<LessonPicker
 				bind:picked
 				current={app.lastLesson}
@@ -258,5 +319,24 @@
 	}
 	.status p {
 		margin: 0 0 8px;
+	}
+	.review-note p {
+		margin: 0;
+		font-family: var(--f-hand);
+		font-weight: 600;
+		font-size: 1.2rem;
+	}
+	.review-note .k {
+		display: block;
+		font-family: var(--f-ui);
+		font-weight: 400;
+		font-size: 0.85rem;
+		color: var(--soft);
+	}
+	.review-note .hint {
+		margin: 6px 0 12px;
+		font-family: var(--f-ui);
+		font-weight: 400;
+		font-size: 0.9rem;
 	}
 </style>

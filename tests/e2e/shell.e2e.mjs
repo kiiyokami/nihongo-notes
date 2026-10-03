@@ -7,13 +7,13 @@ export default async function (browser) {
 	await page.evaluate(() => localStorage.clear());
 	await page.reload();
 
-	const nav = await page.$$eval('nav[aria-label="Study modes"] a', (as) => as.map((a) => [a.textContent.trim(), a.getAttribute('href')]));
-	t.check('nav has the four modes', JSON.stringify(nav.map((n) => n[0])) === JSON.stringify(['Lessons', 'Flashcards', 'Quiz', 'Kana']), JSON.stringify(nav));
+	const nav = await page.$$eval('nav[aria-label="Study modes"] a', (as) => as.map((a) => [a.innerText.trim(), a.getAttribute('href')]));
+	t.check('nav has the five modes', JSON.stringify(nav.map((n) => n[0])) === JSON.stringify(['Today', 'Lessons', 'Flashcards', 'Quiz', 'Kana']), JSON.stringify(nav));
 	for (const [label, href] of nav) {
 		// SvelteKit changes pages without a full load, so wait for the address, not a navigation event
 		await page.click(`nav[aria-label="Study modes"] a[href="${href}"]`);
 		await page.waitForFunction((h) => location.pathname === h, { timeout: 5000 }, href);
-		const current = await page.$eval('nav[aria-label="Study modes"] a[aria-current="page"]', (a) => a.textContent.trim()).catch(() => '');
+		const current = await page.$$eval('nav[aria-label="Study modes"] a[aria-current="page"]', (as) => as.map((a) => a.innerText.trim()).join(','));
 		t.check(`${label} opens and is marked current`, current === label, current);
 	}
 
@@ -40,6 +40,8 @@ export default async function (browser) {
 		return { bottom: Math.round(r.bottom), h: innerHeight };
 	});
 	t.check('on phones the modes sit in a bottom bar', navBox.bottom === navBox.h, JSON.stringify(navBox));
+	const short = await phone.$$eval('nav[aria-label="Study modes"] a', (as) => as.map((a) => a.innerText.trim()));
+	t.check('on phones Flashcards is shortened to Cards', JSON.stringify(short) === JSON.stringify(['Today', 'Lessons', 'Cards', 'Quiz', 'Kana']), JSON.stringify(short));
 
 	t.check('no page errors', page.errors.length + phone.errors.length === 0, [...page.errors, ...phone.errors].join('; '));
 	await page.close();

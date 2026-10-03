@@ -1,7 +1,8 @@
 import { BASE, LESSONS, openPage, stubSpeech, suite, text } from './harness.mjs';
 
 const code = (o) => Buffer.from(JSON.stringify(o)).toString('base64');
-const ready = (page) => page.waitForFunction(() => document.querySelector('.hero:not(.waiting)'));
+const ready = (page) => page.waitForFunction(() => document.querySelector('.today:not(.waiting)'));
+const lessonTask = (page) => text(page, '.tasks li:nth-child(2)');
 
 export default async function (browser) {
 	const t = suite('home');
@@ -12,9 +13,13 @@ export default async function (browser) {
 	await page.reload();
 	await ready(page);
 
-	t.check('first visit continues with lesson 1', (await text(page, '.hero a')).includes('lesson 1'));
+	t.check('first visit: three tasks, none done', (await page.$$('.tasks li')).length === 3 && !(await page.$('.tasks li.done')));
+	t.check('first visit: the lesson task is lesson 1', (await lessonTask(page)).startsWith('Lesson 1: Introducing yourself'), await lessonTask(page));
+	t.check('first visit: ten new words to review', (await text(page, '.tasks li:first-child .d')) === '0 due, 10 new', await text(page, '.tasks li:first-child .d'));
+	t.check("Start today's page goes to the review", (await page.$eval('.today .start', (a) => a.textContent.trim() + ' ' + a.getAttribute('href'))) === "Start today's page /flashcards/?review");
+	t.check('an empty week explains the stamps', (await text(page, '.streak')) === 'A stamp goes here for each day you study.');
+	t.check('progress for each block of five lessons', (await page.$$('.blocks li')).length === LESSONS / 5 && (await text(page, '.blocks li:first-child .count')).startsWith('0 of '));
 	t.check(`all ${LESSONS} chapters listed`, (await page.$$('.chapters a')).length === LESSONS);
-	t.check('ways to study', JSON.stringify(await page.$$eval('.ways a', (as) => as.map((a) => a.getAttribute('href')))) === '["/flashcards/","/quiz/","/kana/"]');
 	t.check('no voice notice when a voice exists', !(await text(page, 'main')).includes('no Japanese voice'));
 
 	// a returning learner: saved progress shows after a reload
@@ -25,7 +30,7 @@ export default async function (browser) {
 	await page.reload();
 	t.check('dark theme applies before the page is ready', (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
 	await ready(page);
-	t.check('returning learner continues with lesson 7', (await text(page, '.hero')).includes('Tools, giving and receiving') && (await text(page, '.hero a')).includes('lesson 7'));
+	t.check('returning learner continues with lesson 7', (await lessonTask(page)).includes('Tools, giving and receiving') && (await page.$eval('.tasks li:nth-child(2) a', (a) => a.getAttribute('href'))) === '/lessons/7/?today');
 
 	await page.click('.import summary');
 	const good = code({ v: 1, known: ['いきます', 'でんしゃ'], lesson: 3 });
@@ -33,7 +38,8 @@ export default async function (browser) {
 	await page.click('.import button[type="submit"]');
 	t.check('import with line breaks works', (await text(page, '.import .hint')) === 'Imported 2 words.', await text(page, '.import .hint'));
 	t.check('imported words are saved', JSON.stringify(await page.evaluate(() => JSON.parse(localStorage.getItem('nn.known')))) === '["いきます","でんしゃ"]');
-	t.check('import moves "continue" to the old lesson', (await text(page, '.hero a')).includes('lesson 3'));
+	t.check("import moves today's lesson to the old one", (await lessonTask(page)).startsWith('Lesson 3:'));
+	t.check('imported words count as known', (await text(page, '.blocks li:first-child .count')).startsWith('2 of '));
 	await page.type('#import-code', good);
 	await page.click('.import button[type="submit"]');
 	t.check('importing again adds nothing', (await text(page, '.import .hint')) === 'Imported 0 words.');

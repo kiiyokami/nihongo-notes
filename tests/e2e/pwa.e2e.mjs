@@ -29,7 +29,7 @@ export default async function (browser) {
 		server = null;
 		await new Promise((r) => setTimeout(r, 500));
 		await page.reload();
-		t.check('offline: home still opens', !!(await page.$('.hero')));
+		t.check('offline: home still opens', !!(await page.$('.today')));
 		await page.goto(URL + '/lessons/3/');
 		t.check('offline: a lesson never opened before still opens (pre-cached)', (await text(page, 'h1')).includes('Here, there, where'));
 		await page.goto(URL + '/no-such-page/');

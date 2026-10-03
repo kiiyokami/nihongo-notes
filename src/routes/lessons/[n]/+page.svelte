@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { lessons } from '$lib/content';
-	import { app, save } from '$lib/state/app.svelte';
+	import { app, save, logToday } from '$lib/state/app.svelte';
 	import { filterWords } from '$lib/study/words';
 	import { blockOf } from '$lib/study/blocks';
 	import ChapterHeader from '$lib/ui/ChapterHeader.svelte';
@@ -9,6 +11,7 @@
 	import Markup from '$lib/ui/Markup.svelte';
 	import Example from '$lib/ui/Example.svelte';
 	import Speak from '$lib/ui/Speak.svelte';
+	import TodayNext from '$lib/ui/TodayNext.svelte';
 
 	let { data } = $props();
 	const lesson = $derived(data.lesson);
@@ -20,10 +23,14 @@
 	let searchEl = $state<HTMLInputElement>();
 	const shown = $derived(filterWords(lesson.words, query));
 
+	// opened from today's page (/lessons/N/?today): the end of the lesson offers the next task
+	const fromToday = $derived(app.ready && page.url.searchParams.has('today'));
+
 	$effect(() => {
 		if (!app.ready) return;
 		app.lastLesson = lesson.n;
 		save('lastLesson');
+		untrack(() => logToday('lesson'));
 	});
 	// a new lesson starts with an empty filter
 	$effect(() => {
@@ -122,6 +129,8 @@
 				</div>
 			{/if}
 		</section>
+
+		{#if fromToday}<TodayNext />{/if}
 
 		<nav class="pager" aria-label="Previous and next lesson">
 			{#if prev}<a href="/lessons/{prev.n}/" rel="prev"><small>← Lesson {prev.n}</small><Markup text={prev.title} /></a>{:else}<span></span>{/if}
