@@ -2,50 +2,25 @@
 
 My own study app for Minna no Nihongo, lessons 1 to 25: simplified patterns, word lists, flashcards, six kinds of quiz, a kana chart, and a play button that reads Japanese aloud with your device's voice. It works offline and installs like an app.
 
-## Run it while working on it
+## Using it
 
-```bash
-npm install
-npm run dev
-```
+The home page has a button back to the lesson you were last on. The tabs (at the bottom on a phone) lead to:
 
-Open the address it prints. The page reloads every time you save.
+- **Lessons**: the patterns, example sentences and word list for each lesson. ▶ reads a sentence aloud.
+- **Flashcards**: tick the lessons you want, tap the card to see the answer, then press Got it or Again. Again brings the card back a few cards later.
+- **Quiz**: pick a question type and the lessons, then Start. Sentence questions can be answered with word tiles or by typing.
+- **Kana**: the hiragana and katakana chart. Tap a letter to hear it.
 
-## Put it on your server
+Your known words, last lesson and settings are saved in the browser you study in. A different browser or device starts fresh.
 
-```bash
-npm run build
-```
+On a keyboard:
 
-Upload everything inside `build/` to your web server's folder for the site. Every page is a plain HTML file, so no Node process is needed.
+- Flashcards: Space shows the answer, → marks the word as known, ← puts it back in the pile.
+- Quiz: 1 to 4 pick an answer, Enter goes to the next question.
 
-- **Unknown addresses:** set your server to answer them with `404.html`. On nginx: `error_page 404 /404.html;`. On Apache: `ErrorDocument 404 /404.html`.
-- **HTTPS is required** for "Add to Home Screen" and offline use. A free certificate from Let's Encrypt works.
-- **Check the build locally first:** `npm run preview` serves `build/` the way your server will.
+## Editing your notes
 
-## Checks
-
-```bash
-npm test            # unit tests for the study logic and the notes
-npm run check       # type check
-npm run test:e2e    # builds, then clicks through every page in Firefox
-```
-
-`npm run test:e2e` uses the Firefox at `/usr/bin/firefox`; point `FIREFOX` at another one if needed.
-
-## Where things are
-
-| Path | What's in it |
-| --- | --- |
-| `src/lib/content/lessons/01.ts` … `25.ts` | **Your notes, one lesson per file.** Edit these to add or fix content. |
-| `src/lib/content/particles.ts` | Particle quiz questions |
-| `src/lib/content/qa.ts` | "Answer the question" pairs |
-| `src/lib/study/` | Quiz, flashcard, tile and number logic (no UI) |
-| `src/routes/` | The pages |
-| `src/app.css` | Colors and type. Light and dark colors are at the top. |
-| `static/icons/` | App icons (placeholders: replace the PNGs with your own, same sizes) |
-
-## Adding content
+Each lesson is one file: `src/lib/content/lessons/05.ts` is lesson 5. Open it, change the text, save. If the app is running (see below), the page updates as soon as you save.
 
 A lesson file looks like this:
 
@@ -66,16 +41,80 @@ export const lesson: Lesson = {
 };
 ```
 
-- In Japanese text, `[は]` marks a particle and `{Noun}` is a blank for your own word.
-- Write example sentences with spaces between words and particles in `[ ]`: that's where the word tiles are cut.
-- A pattern can have a `table` (`head`, `rows`) and a `note`.
-- A table with a `quiz` line joins the Numbers quiz. Write one English prompt per column after the first: `#` is the row's first cell, and the part before `|` is used for 1, for example `quiz: ['# person|# people']`. Rows starting with `?` are shown but not asked. The hours and minutes tables also have `clock: 'h'` and `clock: 'm'`, which is how the quiz builds times like 4:30.
-- `particles.ts` entries: `['sentence with ＿', 'answer', ['four', 'choices'], 'English']`.
-- `qa.ts` entries: `[lesson, 'question？', 'answer。', 'English of the answer']`.
+Two marks do most of the work in Japanese text:
 
-If a lesson file has a mistake, `npm run check` and `npm test` say which file and line, and `npm run build` refuses to build.
+- `[は]` marks a particle. It shows highlighted.
+- `{Noun}` is a blank for your own word.
 
-## Keyboard
+Put spaces between words in example sentences. The word-tile quiz cuts sentences at the spaces and the `[ ]` marks, so a sentence without spaces becomes one big tile.
 
-- **Flashcards:** Space shows the answer, → marks a word as known, ← puts it back in the pile.
-- **Quiz:** keys 1 to 4 pick an answer; Enter goes to the next question.
+A pattern can also have a `note` (a grey box under it) and a `table`:
+
+```ts
+table: {
+	head: ['number', 'people'],
+	rows: [['1', 'ひとり'], ['2', 'ふたり']],
+	quiz: ['# person|# people']
+}
+```
+
+Add a `quiz` line and the table joins the Numbers quiz. It has one English prompt per column after the first. `#` stands for the row's first cell, and the part before `|` is used when that cell is 1 ("1 person", "2 people"). Rows starting with `?` are shown but never asked. The hours and minutes tables in lesson 4 also have `clock: 'h'` and `clock: 'm'`, which is how the quiz builds times like 4:30.
+
+Two more files hold quiz questions:
+
+- `src/lib/content/particles.ts`: `['sentence with ＿', 'answer', ['four', 'choices'], 'English']`
+- `src/lib/content/qa.ts`: `[lesson, 'question？', 'answer。', 'English of the answer']`
+
+After editing, run `npm test` and `npm run check`. If a file has a mistake, such as a missing bracket or a table row with the wrong number of cells, they say which lesson and which entry.
+
+## Running it on your computer
+
+The first time:
+
+```bash
+npm install
+```
+
+Then, whenever you want to study or edit:
+
+```bash
+npm run dev
+```
+
+Open the address it prints.
+
+## Putting it online
+
+```bash
+npm run build
+```
+
+Upload everything inside `build/` to your web server's folder for the site. Every page is a plain HTML file, so the server doesn't need Node.
+
+Then, on the server:
+
+1. Answer unknown addresses with `404.html`. On nginx: `error_page 404 /404.html;`. On Apache: `ErrorDocument 404 /404.html`.
+2. Turn on HTTPS. Installing the app and using it offline only work over HTTPS. A free certificate from Let's Encrypt is enough.
+
+To try the build first, `npm run preview` serves `build/` the way your server will.
+
+## Checks
+
+```bash
+npm test            # the study logic and the notes
+npm run check       # type check
+npm run test:e2e    # builds the app, then clicks through every page in Firefox
+```
+
+`npm run test:e2e` uses the Firefox at `/usr/bin/firefox`. Set `FIREFOX` to use a different one.
+
+## Where everything is
+
+| Path | What's in it |
+| --- | --- |
+| `src/lib/content/lessons/` | Your notes, one file per lesson |
+| `src/lib/content/particles.ts`, `qa.ts` | Particle and "answer the question" quiz questions |
+| `src/lib/study/` | How quizzes and flashcard decks are built |
+| `src/routes/` | The pages |
+| `src/app.css` | Colors and fonts. The light and dark colors are at the top. |
+| `static/icons/` | App icons. These are placeholders: replace the PNGs with your own at the same sizes. |
