@@ -32,6 +32,12 @@ export default async function (browser) {
 	await ready(page);
 	t.check('returning learner continues with lesson 7', (await lessonTask(page)).includes('Tools, giving and receiving') && (await page.$eval('.tasks li:nth-child(2) a', (a) => a.getAttribute('href'))) === '/lessons/7/?today');
 
+	// the daily reminder hands over a calendar file; its contents are checked in reminder.spec.ts
+	await page.click('details.remind summary');
+	await page.$eval('#remind-at', (i) => (i.value = '07:30'));
+	await page.click('#remind-at ~ .btn');
+	t.check('the reminder explains where it went', (await text(page, 'details.remind .hint')).includes('calendar'));
+
 	await page.click('.import summary');
 	const good = code({ v: 1, known: ['いきます', 'でんしゃ'], lesson: 3 });
 	await page.type('#import-code', good.slice(0, 12) + '\n' + good.slice(12) + '\n');

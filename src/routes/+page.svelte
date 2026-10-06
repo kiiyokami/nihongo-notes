@@ -9,6 +9,7 @@
 	import { nextTask, recentLessons, taskHref } from '$lib/study/today';
 	import { blockOf, blockProgress } from '$lib/study/blocks';
 	import { lessonsText } from '$lib/study/text';
+	import { reminderIcs } from '$lib/study/reminder';
 	import Markup from '$lib/ui/Markup.svelte';
 	import Mark from '$lib/ui/Mark.svelte';
 	import Hanamaru from '$lib/ui/Hanamaru.svelte';
@@ -30,6 +31,20 @@
 		return app.days[today]?.length ? `${days}.` : `${days} so far. Study today to keep it going.`;
 	});
 	const quizLessons = $derived(lessonsText(recentLessons(current.n), lessons.length));
+
+	let remindAt = $state('19:00');
+	let remindMsg = $state('');
+
+	// hands the phone a calendar event; its calendar asks to add it, then rings every day at that time
+	function addReminder(e: SubmitEvent) {
+		e.preventDefault();
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(new Blob([reminderIcs(remindAt, location.origin + '/')], { type: 'text/calendar' }));
+		a.download = 'nihongo-daily-reminder.ics';
+		a.click();
+		setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+		remindMsg = 'Open the downloaded file if your calendar doesn\'t ask to add it.';
+	}
 
 	let code = $state('');
 	let importMsg = $state('');
@@ -110,6 +125,16 @@
 			<p class="notice">This device has no Japanese voice, so the play buttons are hidden.</p>
 		{/if}
 
+		<details class="remind">
+			<summary>Remind me every day</summary>
+			<form onsubmit={addReminder}>
+				<label for="remind-at">A daily event with an alarm goes in your phone's calendar. Tap it to come back here.</label>
+				<input id="remind-at" type="time" required bind:value={remindAt} />
+				<button class="btn" type="submit">Add to my calendar</button>
+			</form>
+			<p class="hint" aria-live="polite">{remindMsg}</p>
+		</details>
+
 		<details class="import">
 			<summary>Import from the old site</summary>
 			<form onsubmit={runImport}>
@@ -146,14 +171,17 @@
 			</ul>
 		</div>
 
-		<h2 id="lessons-title">Lessons</h2>
-		<ol class="chapters" aria-labelledby="lessons-title">
-			{#each lessons as l (l.n)}
-				<li class="b-{blockOf(l.n)}">
-					<a href="/lessons/{l.n}/" aria-current={l.n === current.n ? 'true' : undefined}><span class="num">{l.n}</span><span class="t"><Markup text={l.title} /></span></a>
-				</li>
-			{/each}
-		</ol>
+		<!-- on phones the Lessons tab has these, so the home stays short -->
+		<div class="all-lessons">
+			<h2 id="lessons-title">Lessons</h2>
+			<ol class="chapters" aria-labelledby="lessons-title">
+				{#each lessons as l (l.n)}
+					<li class="b-{blockOf(l.n)}">
+						<a href="/lessons/{l.n}/" aria-current={l.n === current.n ? 'true' : undefined}><span class="num">{l.n}</span><span class="t"><Markup text={l.title} /></span></a>
+					</li>
+				{/each}
+			</ol>
+		</div>
 	</section>
 </div>
 
@@ -357,7 +385,8 @@
 		background: var(--red);
 		color: var(--on-red);
 	}
-	.import {
+	.import,
+	.remind {
 		max-width: 36rem;
 	}
 	summary {
@@ -372,6 +401,14 @@
 		gap: 8px;
 		justify-items: start;
 	}
+	input[type='time'] {
+		min-height: 44px;
+		padding: 6px 10px;
+		border: 1px solid var(--soft);
+		border-radius: 6px;
+		background: var(--sheet);
+		font-size: 1.1rem;
+	}
 	textarea {
 		width: 100%;
 		padding: 8px;
@@ -380,6 +417,22 @@
 		background: var(--sheet);
 		font-size: 0.85rem;
 		word-break: break-all;
+	}
+	/* on phones: today's page, then the week, then the rarely used extras */
+	@media (max-width: 999.98px) {
+		.left {
+			display: contents;
+		}
+		.right {
+			order: 1;
+		}
+		.import,
+		.remind {
+			order: 2;
+		}
+		.all-lessons {
+			display: none;
+		}
 	}
 	/* on a computer: an open notebook, today's page on the left, your progress and the lessons on the right */
 	@media (min-width: 1000px) {
